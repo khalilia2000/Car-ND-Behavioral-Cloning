@@ -13,7 +13,7 @@ from matplotlib import gridspec
 
 class ImgDataSet(object):
 
-  def __init__(self,images,labels,norm_max_min=0.005,scaled_dim=(100,50)):
+  def __init__(self,images,labels,norm_max_min=0.5,scaled_dim=(96,48)):
                
     """
     Construct a DataSet of Images.
@@ -113,6 +113,9 @@ class ImgDataSet(object):
     self.resize()
     self.equalize_hist()
     self.normalize()
+    # changing shape of the images to contain 1 channel
+    self._images = self._images.reshape(-1,self._images.shape[1],self._images.shape[2],1)
+    
     pass
   
   
