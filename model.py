@@ -18,7 +18,7 @@ img_ch= 1
 img_norm = 0.5 # max/min of normalized pixel values
 # directory in which data is saved
 work_dir =  'C:\\Users\\ali.khalili\\Desktop\\Car-ND\\Car-ND-Behavioral-Cloning-P3\\'
-img_dir = work_dir + 'data\\' 
+img_dir = work_dir + 'added_data\\' 
 # maximum number of images to read from disk into memory
 max_mem = 5120
 
@@ -254,7 +254,7 @@ def main():
   
   # loading model and training
   model_file = work_dir+'model.json'
-  model = load_model_and_train(model_file, X_trn, y_trn, X_val, y_val, epochs=3)
+  model = load_model_and_train(model_file, X_trn, y_trn, X_val, y_val, epochs=2)
   
   save_model_and_weights(model)
   
