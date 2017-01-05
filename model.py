@@ -4,6 +4,7 @@ import glob
 import cv2
 import pandas as pd
 from keras.models import Sequential
+from keras.models import model_from_json
 from keras.layers import Dense, Dropout, Flatten, Activation
 from keras.layers import Convolution2D, MaxPooling2D
 from sklearn.model_selection import train_test_split
@@ -16,8 +17,10 @@ img_cols = 96
 img_ch= 1  
 img_norm = 0.5 # max/min of normalized pixel values
 # directory in which data is saved
-work_dir =  'C:\\Users\\ali.khalili\\Desktop\\Car-ND\\Car-ND-Behavioral-Cloning-P3\\'
-img_dir = work_dir + 'data\\'   
+work_dir =  'C:\\Udacity Courses\\Car-ND-Udacity\\P3 - Behavioral Cloning\\'
+img_dir = work_dir + 'data\\' 
+# maximum number of images to read from disk into memory
+max_mem = 5120
 
 
 def get_filenames_and_labels(test_ratio=0.15):
@@ -80,7 +83,7 @@ def data_generator(num_images_to_load, batch_size, training_filenames, training_
   global img_norm
   
   # length of the training dataset
-  total_images = len(training_filenames)
+  total_trn_images = len(training_filenames)
   
   while 1:     
     # Shuffling the images before loading
@@ -91,11 +94,11 @@ def data_generator(num_images_to_load, batch_size, training_filenames, training_
     
     # loading images into memory in batches and passing on to the optimizer
     start_index = 0
-    while start_index < total_images-1:
+    while start_index < total_trn_images-1:
       
       # loading image data into memory  
       loaded_images = []
-      num_loaded = min(num_images_to_load,total_images-start_index)
+      num_loaded = min(num_images_to_load,total_trn_images-start_index)
       for i in range(num_loaded): 
         loaded_images.append(cv2.imread(filenames[start_index+i]))
       loaded_images = np.asarray(loaded_images)
@@ -179,26 +182,82 @@ def get_model():
   
   return model
 
+def load_model_and_train(model_file, X_trn, y_trn, X_val, y_val, epochs=10, b_size=64):
+  """
+  loads the model and weights that were previously saved, and
+  continues training the model for the number of epochs specified.
+  """
+  
+  global max_mem
+  
+  # loading the model
+  with open(model_file, 'r') as jfile:
+    json_str = json.loads(jfile.read())
+    model = model_from_json(json_str)
 
-def main():
-  # splitting data into training and validatoin sets
-  test_ratio = 0.15
-  X_trn, y_trn, X_val, y_val = get_filenames_and_labels(test_ratio)
+  model.compile("adam", "mse")
+  weights_file = model_file.replace('json', 'h5')
+  model.load_weights(weights_file)
+  
+  # training the model
+  num_trn_samples = ((len(X_trn)*2) // b_size) * b_size
+  num_val_samples = ((len(X_val)*2) // b_size) * b_size
+  model.fit_generator(data_generator(max_mem,b_size,X_trn,y_trn),
+                      samples_per_epoch=num_trn_samples,nb_epoch=epochs, 
+                      validation_data=data_generator(max_mem,b_size,X_val,y_val), 
+                      nb_val_samples=num_val_samples)  
+  
+  return model
+  
+
+def build_model_and_train(X_trn, y_trn, X_val, y_val, epochs=10, b_size=64):
+  """
+  builds a model with random weights and trains the model
+  """
+  
+  global max_mem
+  
   # creating the model
   model = get_model()
   # training the model
-  b_size = 64
-  epochs = 10
-  model.fit_generator(data_generator(10240,b_size,X_trn,y_trn),
-                      samples_per_epoch=40960,nb_epoch=epochs,
-                      validation_data=data_generator(3617,3617,X_val,y_val), nb_val_samples=7234)
+  num_trn_samples = ((len(X_trn)*2) // b_size) * b_size
+  num_val_samples = ((len(X_val)*2) // b_size) * b_size
+  model.fit_generator(data_generator(max_mem,b_size,X_trn,y_trn),
+                      samples_per_epoch=num_trn_samples,nb_epoch=epochs, 
+                      validation_data=data_generator(max_mem,b_size,X_val,y_val), 
+                      nb_val_samples=num_val_samples)
+  return model
+  
+  
+
+def save_model_and_weights(model):
+  """
+  saves the model structure and the weights
+  """
+  global work_dir
   # saving the model and its weights
   print()
-  print('Writing model and weights to file...')
+  print('Saving model and weights...')
   model.save_weights(work_dir+'model.h5')
   with open(work_dir+'model.json','w') as outfile:
     json.dump(model.to_json(), outfile)
   print('Done.')
+  pass
+
+  
+  
+def main():
+  
+  # splitting data into training and validatoin sets
+  test_ratio = 0.15 # ratio of validation images to total number of images
+  X_trn, y_trn, X_val, y_val = get_filenames_and_labels(test_ratio)
+  
+  # loading model and training
+  model_file = work_dir+'model.json'
+  model = load_model_and_train(model_file, X_trn, y_trn, X_val, y_val, epochs=1)
+  
+  save_model_and_weights(model)
+
 
 
 if __name__ == '__main__':
