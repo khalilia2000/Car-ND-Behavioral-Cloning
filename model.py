@@ -6,74 +6,112 @@ import pandas as pd
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten, Activation
 from keras.layers import Convolution2D, MaxPooling2D
+from sklearn.model_selection import train_test_split
+import json
 
 # defining global variables
 # image sizes after pre-processing  
 img_rows = 48
 img_cols = 96
 img_ch= 1  
+img_norm = 0.5 # max/min of normalized pixel values
 # directory in which data is saved
-img_dir = 'C:\\Users\\ali.khalili\\Desktop\\Car-ND\\Car-ND-Behavioral-Cloning-P3\\data\\'    
+work_dir =  'C:\\Users\\ali.khalili\\Desktop\\Car-ND\\Car-ND-Behavioral-Cloning-P3\\'
+img_dir = work_dir + 'data\\'   
 
 
-def data_generator(num_images_to_load, batch_size):
+def get_filenames_and_labels(test_ratio=0.15):
+  """
+  helper function for constructing arrays of labels and image filenames and
+  splitting them into training and validation sets
+  """
   
-  # at least batch_size number of images should be loaded into memory each time  
-  assert num_images_to_load > batch_size
-  
-  # image sizes after pre-processing  
-  global img_rows
-  global img_cols
   global img_dir
   
-  # setting up variables and dataframes
-  file_names = np.asarray([f_name for f_name in glob.glob(img_dir+'IMG\\'+'*.jpg')])
-  total_images = len(file_names)
+  filenames = np.asarray([f_name for f_name in glob.glob(img_dir+'IMG\\'+'*.jpg')])
+  total_images = len(filenames)
   csv_data = pd.read_csv(img_dir+'driving_log.csv')
   
   # removing starting spaces
   csv_data['right'] = csv_data['right'].str.lstrip()
   csv_data['left'] = csv_data['left'].str.lstrip()
   csv_data['center'] = csv_data['center'].str.lstrip()
+
+  # setting labels corresponding to the image filenames
+  labels = []
+  for i in range(total_images):
+    file_key = 'IMG/' + (filenames[i]).replace(img_dir+'IMG\\','')
+    cam_type = file_key[file_key.index('/')+1:file_key.index('_')]
+    if cam_type == 'center':
+      steering_offset = 0
+    elif cam_type == 'left':
+      steering_offset = 0.25
+    else:
+      steering_offset = -0.25
+    labels.append(csv_data[csv_data[cam_type]==file_key]['steering'].values[0]+steering_offset)
+    
+  # converting labels to ndarray  
+  labels = np.asarray(labels)
+  
+  # splitting the data into training and validation sets  
+  X_train, X_val, y_train, y_val = train_test_split(filenames,labels,test_size=test_ratio,stratify=[1 for x in labels])
+  
+  return X_train, y_train, X_val, y_val
+  
+  
+
+def data_generator(num_images_to_load, batch_size, training_filenames, training_labels):
+  """
+  data generator for training data
+  num_iamges_to_load: is the number images that will be loaded into memory each time the files are read from disk
+  batch_size: is the batch_size of training data that is yielded in the generator
+  training_filenames: is the ndarray of filenames containing the training data
+  training_labels: is the ndarray of labels corresponding to the filenames
+  """
+  # at least batch_size number of images should be loaded into memory each time  
+  assert num_images_to_load >= batch_size
+  # number of images and labels should be the same
+  assert training_filenames.shape[0] == training_labels.shape[0]
+  
+  # image sizes after pre-processing  
+  global img_rows
+  global img_cols
+  global img_dir
+  global img_norm
+  
+  # length of the training dataset
+  total_images = len(training_filenames)
   
   while 1:     
     # Shuffling the images before loading
-    perm = np.arange(len(file_names))
+    perm = np.arange(len(training_filenames))
     np.random.shuffle(perm)
-    file_names = file_names[perm]    
+    filenames = training_filenames[perm]    
+    labels = training_labels[perm]
     
-    # loading all images into memory and passing on to the optimizer in batches
+    # loading images into memory in batches and passing on to the optimizer
     start_index = 0
     while start_index < total_images-1:
-      # loading images and labels data into memory  
+      
+      # loading image data into memory  
       loaded_images = []
-      labels = []
-      num_acutally_loaded = min(num_images_to_load,total_images-start_index)
-      for i in range(num_acutally_loaded): 
-        loaded_images.append(cv2.imread(file_names[start_index+i]))
-        file_key = 'IMG/' + (file_names[start_index+i]).replace(img_dir+'IMG\\','')
-        cam_type = file_key[file_key.index('/')+1:file_key.index('_')]
-        if cam_type == 'center':
-          steering_offset = 0
-        elif cam_type == 'left':
-          steering_offset = 0.25
-        else:
-          steering_offset = -0.25
-        labels.append(csv_data[csv_data[cam_type]==file_key]['steering'].values[0]+steering_offset)
-      
-      # changing loaded images to ndarray
+      num_loaded = min(num_images_to_load,total_images-start_index)
+      for i in range(num_loaded): 
+        loaded_images.append(cv2.imread(filenames[start_index+i]))
       loaded_images = np.asarray(loaded_images)
-      labels = np.asarray(labels)
-      start_index += num_acutally_loaded      
-      
+            
       # creating image dataset and pre-processing the images
-      img_data_set = ImgDataSet(loaded_images, labels, scaled_dim=(img_cols,img_rows))
+      sliced_labels = labels[start_index:start_index+num_loaded]
+      img_data_set = ImgDataSet(loaded_images, sliced_labels, norm_max_min=img_norm, scaled_dim=(img_cols,img_rows))
       img_data_set.pre_process()
       
       # passing on batches of data
-      num_batches = num_acutally_loaded // batch_size
+      num_batches = img_data_set.num_examples // batch_size
       for i in range(num_batches):
-        yield img_data_set.next_batch(batch_size)
+        yield img_data_set.next_batch(min(batch_size,num_loaded))
+        
+      # adjusting and moving forward the start_index
+      start_index += num_loaded      
 
 
 def get_model():
@@ -87,7 +125,7 @@ def get_model():
   
   # Convolution 1
   kernel_size = (5,5)
-  nb_filters = 24
+  nb_filters = 36
   model.add(Convolution2D(nb_filters, kernel_size[0], kernel_size[1], border_mode='valid',input_shape=(img_rows, img_cols, img_ch)))
   # Pooling
   pool_size = (2,2)
@@ -128,9 +166,12 @@ def get_model():
   model.add(Dense(100))
   
   # fully connected 2
-  model.add(Dense(35))
+  model.add(Dense(50))
   
   # fully connected 3
+  model.add(Dense(16))
+  
+  # fully connected 4
   model.add(Dense(1))
   
   # compiling the model
@@ -140,8 +181,24 @@ def get_model():
 
 
 def main():
+  # splitting data into training and validatoin sets
+  test_ratio = 0.15
+  X_trn, y_trn, X_val, y_val = get_filenames_and_labels(test_ratio)
+  # creating the model
   model = get_model()
-  model.fit_generator(data_generator(1000,64),samples_per_epoch=24108,nb_epoch=2)
+  # training the model
+  b_size = 64
+  epochs = 10
+  model.fit_generator(data_generator(10240,b_size,X_trn,y_trn),
+                      samples_per_epoch=40960,nb_epoch=epochs,
+                      validation_data=data_generator(3617,3617,X_val,y_val), nb_val_samples=7234)
+  # saving the model and its weights
+  print()
+  print('Writing model and weights to file...')
+  model.save_weights(work_dir+'model.h5')
+  with open(work_dir+'model.json','w') as outfile:
+    json.dump(model.to_json(), outfile)
+  print('Done.')
 
 
 if __name__ == '__main__':

@@ -103,11 +103,12 @@ class ImgDataSet(object):
     pass
   
   
-  def pre_process(self):
+  def pre_process(self, add_flipped=True):
     """
     Executes the pipeline for preprocessing the images
     """
-    self.add_flipped()
+    if add_flipped:    
+      self.add_flipped()
     self.color_to_gray()
     self.crop_top()
     self.resize()

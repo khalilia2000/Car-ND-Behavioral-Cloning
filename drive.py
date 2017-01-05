@@ -15,9 +15,17 @@ from io import BytesIO
 from keras.models import model_from_json
 from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array
 
+from imagedataset import ImgDataSet
+
 # Fix error with Keras and TensorFlow
 import tensorflow as tf
 tf.python.control_flow_ops = tf
+
+# defining global variables for pre-processing
+img_rows = 48
+img_cols = 96
+img_ch= 1  
+img_norm = 0.5 # max/min of normalized pixel values
 
 
 sio = socketio.Server()
@@ -27,6 +35,12 @@ prev_image_array = None
 
 @sio.on('telemetry')
 def telemetry(sid, data):
+
+    global img_rows
+    global img_cols
+    global img_ch
+    global img_norm
+  
     # The current steering angle of the car
     steering_angle = data["steering_angle"]
     # The current throttle of the car
@@ -38,6 +52,13 @@ def telemetry(sid, data):
     image = Image.open(BytesIO(base64.b64decode(imgString)))
     image_array = np.asarray(image)
     transformed_image_array = image_array[None, :, :, :]
+
+    # code added for pre-processing    
+    ids1 = ImgDataSet(transformed_image_array, np.asarray([1]), norm_max_min=img_norm, scaled_dim=(img_cols,img_rows))
+    ids1.pre_process(add_flipped=False)
+    transformed_image_array = ids1.images
+    transformed_image_array = transformed_image_array.reshape(-1,transformed_image_array.shape[1],transformed_image_array.shape[2],1)
+    
     # This model currently assumes that the features of the model are just the images. Feel free to change this.
     steering_angle = float(model.predict(transformed_image_array, batch_size=1))
     # The driving model currently just outputs a constant throttle. Feel free to edit this.
@@ -65,7 +86,8 @@ if __name__ == '__main__':
     help='Path to model definition json. Model weights should be on the same path.')
     args = parser.parse_args()
     with open(args.model, 'r') as jfile:
-        model = model_from_json(jfile.read())
+        json_str = json.loads(jfile.read())
+        model = model_from_json(json_str)
 
     model.compile("adam", "mse")
     weights_file = args.model.replace('json', 'h5')
