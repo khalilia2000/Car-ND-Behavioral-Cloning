@@ -23,6 +23,8 @@ The database provided by Udacity was used for initial training and an ImgDataSet
    * equalizing the histograms of all images to have a more central distribution  
    * normalizing the pixel values to +/-0.5  
    Sample images from the training dataset before and after the pre-processing are included below:  
+     
+   ![alt text](https://github.com/khalilia2000/Car-ND-Behavioral-Cloning/blob/master/example_data_1.JPG "Training Data Before and After Pre-Processing")
 
 ####3- Data Generator:  
 a data generator was used to feed data into fit_generator and to keep the memory consumption managable. The data generator reads images in blocks from the disk and passes them in batch_size to the fit_generator function.
@@ -54,7 +56,9 @@ I started with the NVIDIA's end to end architecture and incrementally made chang
 	
 
 ####5- Fine-Tuning the Model:  
-Once settled on the model architecture, I trained the model using the database provided by Udacity for approximately 10 epochs (each epoch took about 5 minutes on my machine). Once done, the car could drive in autonomous condition for most parts on track 1, except in few isolated locations where it would go off-track. I then generated additional datasets by using training mode of the simulator and fine-tuned my network by training a few epochs (i.e. typically less than 3) on these additional datasets. After a few fine-tuning rounds, the car could drive autonomously on track 1. Each of these datasets pertained to the locations where the car would go off-track. I generated the datasets by parking the car close to the curb, and brining it back to the centre. I only used images in which streeing angle was not zero (i.e. deleted those that steering angle was zero). Examples of additional training data are included below:
+Once settled on the model architecture, I trained the model using the database provided by Udacity for approximately 10 epochs (each epoch took about 5 minutes on my machine). Once done, the car could drive in autonomous condition for most parts on track 1, except in few isolated locations where it would go off-track. I then generated additional datasets by using training mode of the simulator and fine-tuned my network by training a few epochs (i.e. typically less than 3) on these additional datasets. After a few fine-tuning rounds, the car could drive autonomously on track 1. Each of these datasets pertained to the locations where the car would go off-track. I generated the datasets by parking the car close to the curb, and brining it back to the centre. I only used images in which streeing angle was not zero (i.e. deleted those that steering angle was zero). Examples of additional training data are included below:  
+  
+  ![alt text](https://github.com/khalilia2000/Car-ND-Behavioral-Cloning/blob/master/example_data_2.JPG "Training Data Before and After Pre-Processing")
 
 ####6- Choice of hyper parameters:   
    * learning rate: since I was using Adam optimizer, I used the default learning rate of 0.001 for initial training. Subsequently for fine-tuning the network weights, I used a much smaller initial learning rate of 0.0002 to avoid over-fitting in those areas. Note that Adam optimizer adjusts the learning rate during training.  
