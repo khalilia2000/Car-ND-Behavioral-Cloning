@@ -17,6 +17,8 @@ class ImgDataSet(object):
                
     """
     Construct a DataSet of Images.
+    norm_max_min: the maximum/minimum range for normalizing pixel values
+    scaled_dim: scaled dimension of images after pre-processing
     """
         
     assert images.shape[0] == labels.shape[0], (
@@ -106,6 +108,7 @@ class ImgDataSet(object):
   def pre_process(self, add_flipped=True):
     """
     Executes the pipeline for preprocessing the images
+    add_flipped: flippes the images horizontally and adds them to the dataset if True
     """
     if add_flipped:    
       self.add_flipped()
@@ -123,6 +126,7 @@ class ImgDataSet(object):
   def next_batch(self, batch_size):
     """
     Return the next "batch_size" examples from this data set.
+    batch_size: batch size to return
     """
     start = self._index_in_epoch
     self._index_in_epoch += batch_size
@@ -141,15 +145,25 @@ class ImgDataSet(object):
   def plot_image(self, ax_list, grid_fig, grid_index, image_index, show_label=True, cmap=None):
     """
     plots one image in the grid space and passess the appended axis list
+    ax_list: list of axes pertaining to the grid space
+    grid_fig: grid space object
+    grid_index: index in the grid to plot onto
+    image_index: image index to plot
+    show_label: whether to show the labels or not
+    cmap: cmap
     """
     ax_list.append(plt.subplot(grid_fig[grid_index]))
     
-    ax_list[-1].imshow(self._images[image_index], cmap=cmap)
+    img = self._images[image_index]
+    if img.shape[2] == 1:
+      img = img.reshape(img.shape[0],img.shape[1])
+            
+    ax_list[-1].imshow(img, cmap=cmap)
     ax_list[-1].axis('off')
     ax_list[-1].set_aspect('equal')
     y_lim = ax_list[-1].get_ylim()
     if show_label:
-      ax_list[-1].text(0,int(-1*y_lim[0]*0.1),'Steering Angle = {}'.format(self._labels[image_index]),color='r')
+      ax_list[-1].text(0,int(-1*y_lim[0]*0.1),'Steering Angle = {:.4f}'.format(self._labels[image_index]),color='r')
       ax_list[-1].text(0,int(-1*y_lim[0]*0.3),'Image Index = {}'.format(image_index),color='b')
 
     return ax_list
@@ -158,8 +172,13 @@ class ImgDataSet(object):
   def plot_random_grid(self, n_rows, n_cols, show_labels=True, cmap=None):
     """
     plots a random grid of images to verify
+    n_rows: number or rows for the image grid
+    n_cols: number of cols for the image grid
+    show_labels: whether to show the labels or not
+    cmap: cmap
     """
     
+    # creating the grid space
     g_fig = gridspec.GridSpec(n_rows,n_cols) 
     g_fig.update(wspace=0.5, hspace=0.75)
     
