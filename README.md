@@ -2,7 +2,7 @@
 
 Third Project of the Car Nano-degree from Udacity. The following approach was taken during the implementation of this project:
 
-1- Literature Review:  
+####1- Literature Review:  
 A review of the Past Work and Existing Literature (i.e. including posts by other students) was done:
 I was especially inspired by the following links:  
    * https://chatbotslife.com/using-augmentation-to-mimic-human-driving-496b569760a9#.1j27mpyik  
@@ -13,7 +13,7 @@ I was especially inspired by the following links:
    * https://github.com/commaai/research/blob/master/train_steering_model.py  
    * https://carnd-forums.udacity.com/questions/26214464/answers/26215455  
 
-2- Trainind Data and Pre-Processing:  
+####2- Trainind Data and Pre-Processing:  
 The database provided by Udacity was used for initial training and an ImgDataSet class was created for pre-processing the data. The preprocessing pipeline included the following steps:
    * adding horizontally flipped images with reversed steering angles to the database  
    * adding images from left and right cameras and adjusting steering angles by 0.25 in each case  
@@ -24,10 +24,10 @@ The database provided by Udacity was used for initial training and an ImgDataSet
    * normalizing the pixel values to +/-0.5  
    Sample images from the training dataset before and after the pre-processing are included below:  
 
-3- Data Generator:  
+####3- Data Generator:  
 a data generator was used to feed data into fit_generator and to keep the memory consumption managable. The data generator reads images in blocks from the disk and passes them in batch_size to the fit_generator function.
 
-4- Model Architecure:  
+####4- Model Architecure:  
 I started with the NVIDIA's end to end architecture and incrementally made changes to the network. Each incremental network change consisted of training 3 to 5 epochs on the database, and evaluating the results based on the MSE for the validation set. The final network architecture that I settled for is the following (the serial Convolution2D and Relu activation units should result in non-linearity of the process):  
 
 	| Layer (type)                     | Output Shape         | Param #    | Connected to                 |     
@@ -53,14 +53,14 @@ I started with the NVIDIA's end to end architecture and incrementally made chang
 	Non-trainable params: 0
 	
 
-5- Fine-Tuning the Model:  
+####5- Fine-Tuning the Model:  
 Once settled on the model architecture, I trained the model using the database provided by Udacity for approximately 10 epochs (each epoch took about 5 minutes on my machine). Once done, the car could drive in autonomous condition for most parts on track 1, except in few isolated locations where it would go off-track. I then generated additional datasets by using training mode of the simulator and fine-tuned my network by training a few epochs (i.e. typically less than 3) on these additional datasets. After a few fine-tuning rounds, the car could drive autonomously on track 1. Each of these datasets pertained to the locations where the car would go off-track. I generated the datasets by parking the car close to the curb, and brining it back to the centre. I only used images in which streeing angle was not zero (i.e. deleted those that steering angle was zero). Examples of additional training data are included below:
 
-6- Choice of hyper parameters:   
+####6- Choice of hyper parameters:   
    * learning rate: since I was using Adam optimizer, I used the default learning rate of 0.001 for initial training. Subsequently for fine-tuning the network weights, I used a much smaller initial learning rate of 0.0002 to avoid over-fitting in those areas. Note that Adam optimizer adjusts the learning rate during training.  
    * batch size: I played with batch sizes and tried batch sizes of 23, 64, and 128. I found that a batch size of 64 was giving the most stable resutls with fater convergance.
     
-7- Avoiding over-fitting:  
+####7- Avoiding over-fitting:  
 To avoid overfitting I did the following:
    * Dropout Layer: I added a dropout layer with keep_probability of 50% after the first convolution and pooling layer. 
    * Splitting Data int Training and Validation Datasets: I did split the data into validation and training datasets with approximtely 15% data set aside as validation.
