@@ -19,7 +19,7 @@ img_ch= 1
 img_norm = 0.5 # max/min of normalized pixel values
 # directory in which data is saved
 work_dir =  'C:\\Users\\ali.khalili\\Desktop\\Car-ND\\Car-ND-Behavioral-Cloning-P3\\'
-img_dir = work_dir + 'added_data2\\' 
+img_dir = work_dir + 'added_data3\\' 
 # maximum number of images to read from disk into memory
 max_mem = 5120
 
@@ -118,6 +118,7 @@ def data_generator(num_images_to_load, batch_size, training_filenames, training_
       start_index += num_loaded      
 
 
+
 def get_model():
   
   # image sizes after pre-processing  
@@ -126,7 +127,6 @@ def get_model():
   global img_ch  
   
   model = Sequential()
-  
   # Convolution 1
   kernel_size = (5,5)
   nb_filters = 36
@@ -137,8 +137,7 @@ def get_model():
   # Dropout
   keep_prob = 0.5
   model.add(Dropout(keep_prob))
-  
-  # Convolution 2
+    # Convolution 2
   kernel_size = (5,5)
   nb_filters = 36
   model.add(Convolution2D(nb_filters, kernel_size[0], kernel_size[1], border_mode='valid'))
@@ -147,8 +146,7 @@ def get_model():
   model.add(MaxPooling2D(pool_size=pool_size))
   # Activation
   model.add(Activation('relu'))
-  
-  # Convolution 3
+    # Convolution 3
   kernel_size = (4,4)
   nb_filters = 48
   model.add(Convolution2D(nb_filters, kernel_size[0], kernel_size[1], border_mode='valid'))
@@ -157,40 +155,37 @@ def get_model():
   model.add(MaxPooling2D(pool_size=pool_size))
   # Activation
   model.add(Activation('relu'))
-  
-  # Convolution 4
+    # Convolution 4
   kernel_size = (3,3)
   nb_filters = 64
   model.add(Convolution2D(nb_filters, kernel_size[0], kernel_size[1], border_mode='valid'))
-  
-  # flatten
+    # flatten
   model.add(Flatten())
-  
-  # fully connected 1
+    # fully connected 1
   model.add(Dense(100))
-  
-  # fully connected 2
+    # fully connected 2
   model.add(Dense(50))
-  
-  # fully connected 3
+    # fully connected 3
   model.add(Dense(16))
-  
-  # fully connected 4
+    # fully connected 4
   model.add(Dense(1))
-  
-  # compiling the model
+    # compiling the model
   model.compile(optimizer="adam", loss="mse") #using default hyper parameters when creating new network
-  
+  #
   return model
+
+
 
 def load_model_and_train(model_file, X_trn, y_trn, X_val, y_val, epochs=10, b_size=64):
   """
   loads the model and weights that were previously saved, and
   continues training the model for the number of epochs specified.
+  X_trn, X_val: ndarray of file names pertaining to training and validation datasets
+  y_trn, y_val: ndarray of steering angles for training and validation datasets.
+  epochs: number of epochs to train the model
+  b_size: batch size
   """
-  
   global max_mem
-  
   # loading the model
   with open(model_file, 'r') as jfile:
     json_str = json.loads(jfile.read())
@@ -212,13 +207,16 @@ def load_model_and_train(model_file, X_trn, y_trn, X_val, y_val, epochs=10, b_si
   return model
   
 
+
 def build_model_and_train(X_trn, y_trn, X_val, y_val, epochs=10, b_size=64):
   """
   builds a model with random weights and trains the model
+  X_trn, X_val: ndarray of file names pertaining to training and validation datasets
+  y_trn, y_val: ndarray of steering angles for training and validation datasets.
+  epochs: number of epochs to train the model
+  b_size: batch size
   """
-  
   global max_mem
-  
   # creating the model
   model = get_model()
   # training the model
@@ -234,7 +232,7 @@ def build_model_and_train(X_trn, y_trn, X_val, y_val, epochs=10, b_size=64):
 
 def save_model_and_weights(model):
   """
-  saves the model structure and the weights
+  saves the model structure and the weights to model.json and model.h5 respectively.
   """
   global work_dir
   # saving the model and its weights
@@ -254,11 +252,17 @@ def main():
   test_ratio = 0.15 # ratio of validation images to total number of images
   X_trn, y_trn, X_val, y_val = get_filenames_and_labels(test_ratio)
   
+  # building from scratch and training
+  # model = build_model_and_train(X_trn, y_trn, X_val, y_val, epochs=10)
+  
   # loading model and training
   model_file = work_dir+'model.json'
   model = load_model_and_train(model_file, X_trn, y_trn, X_val, y_val, epochs=2)
   
+  # saving the model
   save_model_and_weights(model)
+  
+  pass
   
 
 
