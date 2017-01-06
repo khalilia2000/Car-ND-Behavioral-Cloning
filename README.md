@@ -24,23 +24,23 @@ I was especially inspired by the following links:
 3- I used a data generator to feed data into fit_generator and keep the memory consumption managable. The data generator reads images in blocks from the disk and passes them in batch_size specified to the fit_generator.
 
 4- I started with the NVIDIA's end to end architecture and incrementally made changes to the network. Each incremental network change consisted of training 3 to 5 epochs on the database, and evaluating the results. The final network architecture that I settled for is the following:  
-    Layer (type)                      |Output Shape          |Param #     |Connected to                     
-    ----------------------------------|----------------------|------------|----------------------------
-	convolution2d_1 (Convolution2D)   |(None, 44, 92, 36)    |936         |convolution2d_input_21[0][0]     
-	maxpooling2d_1 (MaxPooling2D)     |(None, 22, 46, 36)    |0           |convolution2d_1[0][0]            
-	dropout_1 (Dropout)               |(None, 22, 46, 36)    |0           |maxpooling2d_1[0][0]             
-	convolution2d_2 (Convolution2D)   |(None, 18, 42, 36)    ||32436      |dropout_1[0][0]                  
-	maxpooling2d_2 (MaxPooling2D)     |(None, 9, 21, 36)     |0           |convolution2d_2[0][0]            
-	activation_1 (Activation)         |(None, 9, 21, 36)     |0           |maxpooling2d_2[0][0]             
-	convolution2d_3 (Convolution2D)   |(None, 6, 18, 48)     |27696       |activation_1[0][0]               
-	maxpooling2d_3 (MaxPooling2D)     |(None, 3, 9, 48)      |0           |convolution2d_3[0][0]            
-	activation_2 (Activation)         |(None, 3, 9, 48)      |0           |maxpooling2d_3[0][0]             
-	convolution2d_4 (Convolution2D)   |(None, 1, 7, 64)      |27712       |activation_2[0][0]               
-	flatten_1 (Flatten)               |(None, 448)           |0           |convolution2d_4[0][0]            
-	dense_1 (Dense)                   |(None, 100)           |44900       |flatten_1[0][0]                  
-	dense_2 (Dense)                   |(None, 50)            |5050        |dense_1[0][0]                    
-	dense_3 (Dense)                   |(None, 16)            |816         |dense_2[0][0]                    
-	dense_4 (Dense)                   |(None, 1)             |17          |dense_3[0][0]                    
+    |Layer (type)                      |Output Shape          |Param #     |Connected to                |     
+    |:-------------------------------- |:-------------------- |:---------- |:-------------------------- |     
+	|convolution2d_1 (Convolution2D)   |(None, 44, 92, 36)    |936         |convolution2d_input_21[0][0]|     
+	|maxpooling2d_1 (MaxPooling2D)     |(None, 22, 46, 36)    |0           |convolution2d_1[0][0]       |     
+	|dropout_1 (Dropout)               |(None, 22, 46, 36)    |0           |maxpooling2d_1[0][0]        |     
+	|convolution2d_2 (Convolution2D)   |(None, 18, 42, 36)    |32436       |dropout_1[0][0]             |     
+	|maxpooling2d_2 (MaxPooling2D)     |(None, 9, 21, 36)     |0           |convolution2d_2[0][0]       |     
+	|activation_1 (Activation)         |(None, 9, 21, 36)     |0           |maxpooling2d_2[0][0]        |     
+	|convolution2d_3 (Convolution2D)   |(None, 6, 18, 48)     |27696       |activation_1[0][0]          |     
+	|maxpooling2d_3 (MaxPooling2D)     |(None, 3, 9, 48)      |0           |convolution2d_3[0][0]       |     
+	|activation_2 (Activation)         |(None, 3, 9, 48)      |0           |maxpooling2d_3[0][0]        |     
+	|convolution2d_4 (Convolution2D)   |(None, 1, 7, 64)      |27712       |activation_2[0][0]          |     
+	|flatten_1 (Flatten)               |(None, 448)           |0           |convolution2d_4[0][0]       |     
+	|dense_1 (Dense)                   |(None, 100)           |44900       |flatten_1[0][0]             |     
+	|dense_2 (Dense)                   |(None, 50)            |5050        |dense_1[0][0]               |     
+	|dense_3 (Dense)                   |(None, 16)            |816         |dense_2[0][0]               |     
+	|dense_4 (Dense)                   |(None, 1)             |17          |dense_3[0][0]               |     
 
 	Total params: 139,563
 	Trainable params: 139,563
