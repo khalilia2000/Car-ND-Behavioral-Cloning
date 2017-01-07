@@ -66,7 +66,7 @@ Once settled on the model architecture, I trained the model using the database p
     
 ####7- Avoiding over-fitting:  
 To avoid overfitting I did the following:
-   * Dropout Layer: I added a dropout layer with keep_probability of 50% after the first convolution and pooling layer. 
+   * Dropout Layer: I added a dropout layer with keep_probability of 50% after the first convolution and pooling layer. I also tried adding two dropout layers and it did not result in a significant improvement.
    * Splitting Data int Training and Validation Datasets: I did split the data into validation and training datasets with approximtely 15% data set aside as validation.
    * No test dataset was set aside, because the ultimate test was considered to be the driving of the car autonomously on the first track.
 	
