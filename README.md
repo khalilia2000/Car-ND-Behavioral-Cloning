@@ -56,12 +56,12 @@ I started with the NVIDIA's end to end architecture and incrementally made chang
 	
 
 ####5- Fine-Tuning the Model:  
-Once settled on the model architecture, I trained the model using the database provided by Udacity for approximately 10 epochs (each epoch took about 5 minutes on my machine). Once done, the car could drive in autonomous condition for most parts on track 1, except in few isolated locations where it would go off-track. I then generated additional datasets by using training mode of the simulator and fine-tuned my network by training a few epochs (i.e. typically less than 3) on these additional datasets. After a few fine-tuning rounds, the car could drive autonomously on track 1. Each of these datasets pertained to the locations where the car would go off-track. I generated the datasets by parking the car close to the curb, and brining it back to the centre. I only used images in which streeing angle was not zero (i.e. deleted those that steering angle was zero). Examples of additional training data are included below:  
+Once settled on the model architecture, I trained the model using the database provided by Udacity for approximately 10 epochs (each epoch took about 5 minutes on my machine). Once done, the car could drive in autonomous condition for most parts on track 1, except in few isolated locations where it would go off-track. I then generated additional datasets by using training mode of the simulator and fine-tuned my network by training a few epochs (i.e. typically less than 4) on these additional datasets. After a few fine-tuning rounds, the car could drive autonomously on track 1. Each of these datasets pertained to the locations where the car would go off-track. I generated the datasets by parking the car close to the curb, and brining it back to the centre. I only used images in which streeing angle was not zero (i.e. deleted those that steering angle was zero). Examples of additional training data are included below:  
   
   ![alt text](https://github.com/khalilia2000/Car-ND-Behavioral-Cloning/blob/master/example_data_2.JPG "Training Data Before and After Pre-Processing")
 
 ####6- Choice of hyper parameters:   
-   * learning rate: since I was using Adam optimizer, I used the default learning rate of 0.001 for initial training. Subsequently for fine-tuning the network weights, I used a much smaller initial learning rate of 0.0002 to avoid over-fitting in those areas. Note that Adam optimizer adjusts the learning rate during training.  
+   * learning rate: since I was using Adam optimizer, I used the default learning rate of 0.001 for initial training, whcih worked OK. However, for fine-tuning of the network weights, I found out that using smaller initial learning rates work better. I ended up using learning rates of between 0.00002 and 0.0002. Note that Adam optimizer adjusts the learning rate during training to some extent.  
    * batch size: I played with batch sizes and tried batch sizes of 23, 64, and 128. I found that a batch size of 64 was giving the most stable resutls with fater convergance.
     
 ####7- Avoiding over-fitting:  
@@ -70,3 +70,8 @@ To avoid overfitting I did the following:
    * Splitting Data int Training and Validation Datasets: I did split the data into validation and training datasets with approximtely 15% data set aside as validation.
    * No test dataset was set aside, because the ultimate test was considered to be the driving of the car autonomously on the first track.
 	
+##Reflection on the results
+The following oversvatinos were noted from the results and during training/testing the models:  
+   * Training on the original dataset provided a more smooth driving experience as opposed to training on the datasets that I created myself possibly due to the fact that I was using a keyboard for training, which resulted in overcompensating in some cases. Following the same line, in some areas on the track the car appears to behave erratically and over-compensating for steering angle. This can be attributed to the fact that additional training data I generated was with keyboard.
+   * After the first successful model was trained with data from track 1, I tried the model on track 2, and found out that it goes off-track is a few locations. I had to fine-tune the model even more using sharp corners as training data to overcome that and make the car drive successfully on track 2 too.
+   * I had to increase the throttle to 0.27 in drive.py in order for the car to be able to go up the hill on track 2.
