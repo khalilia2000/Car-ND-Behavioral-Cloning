@@ -19,7 +19,7 @@ img_ch= 1
 img_norm = 0.5 # max/min of normalized pixel values
 # directory in which data is saved
 work_dir =  'C:\\Users\\ali.khalili\\Desktop\\Car-ND\\Car-ND-Behavioral-Cloning-P3\\'
-img_dir = work_dir + 'added_data3\\' 
+img_dir = work_dir + 'added_data5\\' 
 # maximum number of images to read from disk into memory
 max_mem = 5120
 
@@ -191,7 +191,7 @@ def load_model_and_train(model_file, X_trn, y_trn, X_val, y_val, epochs=10, b_si
     json_str = json.loads(jfile.read())
     model = model_from_json(json_str)
 
-  adam_opt = Adam(lr=0.0002) # reducing learning rate for trainin on additional data
+  adam_opt = Adam(lr=0.00005) # reducing learning rate for trainin on additional data
   model.compile(optimizer=adam_opt, loss="mse")
   weights_file = model_file.replace('json', 'h5')
   model.load_weights(weights_file)
@@ -199,10 +199,15 @@ def load_model_and_train(model_file, X_trn, y_trn, X_val, y_val, epochs=10, b_si
   # training the model
   num_trn_samples = ((len(X_trn)*2) // b_size) * b_size
   num_val_samples = ((len(X_val)*2) // b_size) * b_size
-  model.fit_generator(data_generator(max_mem,b_size,X_trn,y_trn),
-                      samples_per_epoch=num_trn_samples,nb_epoch=epochs, 
-                      validation_data=data_generator(max_mem,b_size,X_val,y_val), 
-                      nb_val_samples=num_val_samples)  
+  if num_val_samples:
+    model.fit_generator(data_generator(max_mem,b_size,X_trn,y_trn),
+                        samples_per_epoch=num_trn_samples,nb_epoch=epochs, 
+                        validation_data=data_generator(max_mem,b_size,X_val,y_val), 
+                        nb_val_samples=num_val_samples)
+  else:
+    model.fit_generator(data_generator(max_mem,b_size,X_trn,y_trn),
+                        samples_per_epoch=num_trn_samples,nb_epoch=epochs)
+    
   
   return model
   

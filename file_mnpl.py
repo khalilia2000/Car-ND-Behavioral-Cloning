@@ -12,7 +12,7 @@ import os
 
 
 work_dir =  'C:\\Users\\ali.khalili\\Desktop\\Car-ND\\Car-ND-Behavioral-Cloning-P3\\'
-img_dir = work_dir + 'added_data3\\' 
+img_dir = work_dir + 'added_data5\\' 
 
 def main():
   
